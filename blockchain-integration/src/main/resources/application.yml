@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: blockchain-integration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+server:
+  port: 8082
+
+app:
+  grpc:
+    server:
+      port: 9090
+  blockchain:
+    node:
+      url: ${BLOCKCHAIN_NODE_URL:http://localhost:8545}
+    chain:
+      id: ${BLOCKCHAIN_CHAIN_ID:1337}
+    gas:
+      limit: ${BLOCKCHAIN_GAS_LIMIT:3000000}
+    contract:
+      address: ${BOND_CONTRACT_ADDRESS:}
+    private-key: ${BLOCKCHAIN_PRIVATE_KEY:}
+    admin-wallet: ${ADMIN_WALLET_ADDRESS:}
+
+logging:
+  level:
+    com.esgbank.greenbond.blockchain: DEBUG
+    org.web3j: INFO
+    io.grpc: INFO
+  pattern:
+    level: "%5p [%X{requestId}, %X{clientIp}]"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method

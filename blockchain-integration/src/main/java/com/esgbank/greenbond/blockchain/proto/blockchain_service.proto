@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package com.esgbank.greenbond.blockchain;
+
+option java_package = "com.esgbank.greenbond.blockchain.proto";
+option java_multiple_files = true;
+option java_outer_classname = "BlockchainServiceProto";
+
+service BondTokenizationService {
+  rpc TokenizeBond (TokenizeBondRequest) returns (TokenizeBondResponse);
+  rpc GetBondStatus (BondStatusRequest) returns (BondStatusResponse);
+  rpc RecordImpactData (ImpactDataRequest) returns (ImpactDataResponse);
+  rpc VerifyFundUsage (FundUsageRequest) returns (FundUsageResponse);
+}
+
+message TokenizeBondRequest {
+  string bond_id = 1;
+  string total_supply = 2;
+  string face_value = 3;
+  string coupon_rate = 4;
+  string maturity_date = 5;
+  string project_wallet = 6;
+  string verifier_report_hash = 7;
+  string issuer_wallet = 8;
+}
+
+message TokenizeBondResponse {
+  string transaction_hash = 1;
+  string bond_address = 2;
+  string status = 3;
+  string message = 4;
+  int64 block_number = 5;
+}
+
+message BondStatusRequest {
+  string bond_id = 1;
+  string transaction_hash = 2;
+}
+
+message BondStatusResponse {
+  string bond_id = 1;
+  string status = 2;
+  string bond_address = 3;
+  string transaction_hash = 4;
+  int64 block_number = 5;
+  string owner = 6;
+  string total_supply = 7;
+}
+
+message ImpactDataRequest {
+  string bond_id = 1;
+  string metric_type = 2;
+  double value = 3;
+  string unit = 4;
+  int64 timestamp = 5;
+  string source = 6;
+  string data_hash = 7;
+}
+
+message ImpactDataResponse {
+  string transaction_hash = 1;
+  string status = 2;
+  string impact_id = 3;
+  int64 block_number = 4;
+}
+
+message FundUsageRequest {
+  string bond_id = 1;
+  string transaction_hash = 2;
+  string amount = 3;
+  string recipient = 4;
+  string purpose = 5;
+  string document_hash = 6;
+}
+
+message FundUsageResponse {
+  string verification_hash = 1;
+  string status = 2;
+  bool is_verified = 3;
+  string message = 4;
+  int64 block_number = 5;
+}

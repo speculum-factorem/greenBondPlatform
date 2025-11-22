@@ -1,12 +1,45 @@
 spring:
   application:
     name: platform-core
+    version: 1.0.0
+
   jackson:
     date-format: com.fasterxml.jackson.databind.util.StdDateFormat
     default-property-inclusion: NON_NULL
+    serialization:
+      write-dates-as-timestamps: false
+      indent-output: true
+
+  jpa:
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
 
 logging:
   pattern:
     level: "%5p [%X{requestId}, %X{sessionId}, %X{clientIp}]"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %5p [%X{requestId}, %X{sessionId}, %X{clientIp}] [%t] %-40.40logger{39} : %m%n%wEx"
   level:
-    com.esgbank.greenbond: DEBUG
+    com.esgbank.greenbond: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+server:
+  servlet:
+    context-path: /api
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+      show-components: when_authorized

@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: document-verification-service
+  data:
+    mongodb:
+      uri: mongodb://${MONGO_HOST:localhost}:${MONGO_PORT:27017}/greenbond-verification
+      auto-index-creation: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: 8083
+
+app:
+  file-storage:
+    upload-dir: ./document-uploads
+    max-file-size: 10485760
+    allowed-file-types: pdf,doc,docx,jpg,jpeg,png
+    max-documents-per-request: 10
+
+logging:
+  level:
+    com.esgbank.greenbond.verification: DEBUG
+    org.springframework.data.mongodb: INFO
+  pattern:
+    level: "%5p [%X{requestId}, %X{userId}, %X{clientIp}]"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha

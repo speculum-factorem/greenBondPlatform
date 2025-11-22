@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/greenbond
+  flyway:
+    url: jdbc:postgresql://postgres:5432/greenbond
+
+grpc:
+  client:
+    blockchain-service:
+      address: static://blockchain-integration:9090

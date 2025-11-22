@@ -1,0 +1,8 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://mongo:27017/greenbond-impact
+
+app:
+  influxdb:
+    url: http://influxdb:8086

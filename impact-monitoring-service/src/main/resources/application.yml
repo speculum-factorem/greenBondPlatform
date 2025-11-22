@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: impact-monitoring-service
+  data:
+    mongodb:
+      uri: mongodb://${MONGO_HOST:localhost}:${MONGO_PORT:27017}/greenbond-impact
+      auto-index-creation: true
+  webflux:
+    client:
+      max-memory-size: 10MB
+
+server:
+  port: 8084
+
+app:
+  influxdb:
+    url: ${INFLUXDB_URL:http://localhost:8086}
+    token: ${INFLUXDB_TOKEN:my-token}
+    org: ${INFLUXDB_ORG:esgbank}
+    bucket: ${INFLUXDB_BUCKET:impact-metrics}
+    batch-size: 1000
+    flush-interval: 1000
+
+logging:
+  level:
+    com.esgbank.greenbond.monitoring: DEBUG
+    org.springframework.data.mongodb: INFO
+    com.influxdb: INFO
+  pattern:
+    level: "%5p [%X{requestId}, %X{userId}, %X{clientIp}]"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha

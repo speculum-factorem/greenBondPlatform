@@ -1,0 +1,16 @@
+spring:
+  main:
+    banner-mode: off
+
+  jackson:
+    serialization:
+      indent-output: false
+
+logging:
+  level:
+    com.esgbank.greenbond: DEBUG
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+
+test:
+  mode: true

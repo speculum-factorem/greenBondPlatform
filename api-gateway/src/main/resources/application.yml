@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      httpclient:
+        connect-timeout: 1000
+        response-timeout: 10s
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret-key: ${app.jwt.secret}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  redis:
+    timeout: 2000ms
+
+server:
+  port: 8080
+  forward-headers-strategy: framework
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:defaultSecretKeyForJWTTokenGenerationInGreenBondPlatform}
+    expiration: ${JWT_EXPIRATION:3600}
+
+logging:
+  level:
+    com.esgbank.greenbond.gateway: DEBUG
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: INFO
+  pattern:
+    level: "%5p [%X{requestId}, %X{username}, %X{clientIp}]"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - url: /v3/api-docs/issuance
+        name: Bond Issuance Service
+      - url: /v3/api-docs/monitoring
+        name: Impact Monitoring Service
+      - url: /v3/api-docs/verification
+        name: Document Verification Service
