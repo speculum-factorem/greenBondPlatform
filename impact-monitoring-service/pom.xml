@@ -15,7 +15,7 @@
 
     <properties>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
-        <influxdb.version>2.7.0</influxdb.version>
+        <influxdb.version>7.4.0</influxdb.version>
     </properties>
 
     <dependencies>
