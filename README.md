@@ -1,8 +1,5 @@
 # Green Bond Platform
 
-[![CI](https://github.com/esgbank/green-bond-platform/workflows/CI/badge.svg)](https://github.com/esgbank/green-bond-platform/actions)
-[![CD](https://github.com/esgbank/green-bond-platform/workflows/CD/badge.svg)](https://github.com/esgbank/green-bond-platform/actions)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/esgbank/green-bond-platform/blob/main/LICENSE)
 [![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
@@ -527,7 +524,7 @@ cd ../impact-monitoring-service && mvn spring-boot:run
 cd ../api-gateway && mvn spring-boot:run
 ```
 
-## 📚 API Документация
+## API Документация
 
 ### Swagger UI
 
@@ -611,7 +608,7 @@ Content-Type: application/json
 }
 ```
 
-## 🔐 Безопасность
+## Безопасность
 
 ### Аутентификация и авторизация
 
