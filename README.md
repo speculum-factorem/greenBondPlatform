@@ -1,8 +1,13 @@
 # Green Bond Platform
 
-![CI](https://github.com/esgbank/green-bond-platform/workflows/CI/badge.svg)
-![CD](https://github.com/esgbank/green-bond-platform/workflows/CD/badge.svg)
-![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
+[![CI](https://github.com/esgbank/green-bond-platform/workflows/CI/badge.svg)](https://github.com/esgbank/green-bond-platform/actions)
+[![CD](https://github.com/esgbank/green-bond-platform/workflows/CD/badge.svg)](https://github.com/esgbank/green-bond-platform/actions)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/esgbank/green-bond-platform/blob/main/LICENSE)
+[![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
+[![Swagger](https://img.shields.io/badge/Swagger-OpenAPI-green.svg)](http://localhost:8080/swagger-ui.html)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-black.svg)](https://github.com/esgbank/green-bond-platform)
 
 ## Описание
 
@@ -780,7 +785,7 @@ DOCUMENT_VERIFICATION_SERVICE_URL=http://localhost:8083
 - **Lombok** - уменьшение boilerplate кода
 - **Swagger/OpenAPI** - документация API
 
-## 🏛️ Архитектурные паттерны
+## Архитектурные паттерны
 
 ### Используемые паттерны:
 
@@ -967,7 +972,7 @@ ghcr.io/<owner>/blockchain-integration:latest
 3. **Eureka Service Discovery** - настроено, но не используется в docker-compose
 4. **IoT интеграция** - структура готова, но требуется реальная интеграция
 
-## 👥 Роли пользователей
+## Роли пользователей
 
 ### ISSUER (Эмитент)
 
@@ -992,7 +997,3 @@ ghcr.io/<owner>/blockchain-integration:latest
 - Управление пользователями
 - Настройка системы
 - Мониторинг всех операций
-
-
-**Версия:** 1.0.0  
-**Последнее обновление:** 2024-11-23
