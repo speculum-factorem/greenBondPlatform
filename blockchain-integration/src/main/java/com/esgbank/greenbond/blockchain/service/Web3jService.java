@@ -1,5 +1,6 @@
 package com.esgbank.greenbond.blockchain.service;
 
+import com.esgbank.greenbond.blockchain.exception.BlockchainException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

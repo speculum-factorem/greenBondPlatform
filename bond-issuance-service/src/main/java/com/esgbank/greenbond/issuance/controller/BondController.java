@@ -31,6 +31,7 @@ public class BondController {
 
     private final BondService bondService;
 
+    // Эндпоинт для создания новой зеленой облигации
     @PostMapping
     @Operation(summary = "Create a new green bond", description = "Create a new green bond issuance")
     @ApiResponses({
@@ -47,10 +48,12 @@ public class BondController {
         log.info("REST API: Creating new bond for project: {}, issuer: {}",
                 request.getProjectName(), issuerId);
 
+        // Создаем облигацию через сервис
         BondResponse response = bondService.createBond(request, issuerId, issuerName);
         return ResponseEntity.ok(response);
     }
 
+    // Эндпоинт для токенизации облигации на блокчейне
     @PostMapping("/{bondId}/tokenize")
     @Operation(summary = "Tokenize a bond", description = "Tokenize an existing bond on blockchain")
     public ResponseEntity<BondResponse> tokenizeBond(
@@ -59,10 +62,12 @@ public class BondController {
 
         log.info("REST API: Tokenizing bond: {}, issuer: {}", bondId, issuerId);
 
+        // Токенизируем облигацию через сервис
         BondResponse response = bondService.tokenizeBond(bondId, issuerId);
         return ResponseEntity.ok(response);
     }
 
+    // Эндпоинт для получения информации об облигации по ID
     @GetMapping("/{bondId}")
     @Operation(summary = "Get bond details", description = "Get detailed information about a bond")
     public ResponseEntity<BondResponse> getBond(
@@ -70,6 +75,7 @@ public class BondController {
 
         log.debug("REST API: Getting bond details for: {}", bondId);
 
+        // Получаем облигацию через сервис
         BondResponse response = bondService.getBond(bondId);
         return ResponseEntity.ok(response);
     }

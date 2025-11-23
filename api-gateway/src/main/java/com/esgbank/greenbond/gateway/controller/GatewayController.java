@@ -1,7 +1,8 @@
 package com.esgbank.greenbond.gateway.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+// Временно отключено из-за проблем с совместимостью зависимостей
+//import io.swagger.v3.oas.annotations.Operation;
+//import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +17,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/gateway")
 @RequiredArgsConstructor
-@Tag(name = "Gateway", description = "API Gateway management endpoints")
+//@Tag(name = "Gateway", description = "API Gateway management endpoints")
 public class GatewayController {
 
     @GetMapping("/health")
-    @Operation(summary = "Gateway health check", description = "Check API Gateway status")
+    //@Operation(summary = "Gateway health check", description = "Check API Gateway status")
     public Mono<ResponseEntity<Map<String, String>>> health() {
         log.debug("Health check request");
         return Mono.just(ResponseEntity.ok(Map.of(
@@ -31,7 +32,7 @@ public class GatewayController {
     }
 
     @GetMapping("/info")
-    @Operation(summary = "Gateway information", description = "Get API Gateway information and routes")
+    //@Operation(summary = "Gateway information", description = "Get API Gateway information and routes")
     public Mono<ResponseEntity<Map<String, Object>>> info() {
         log.debug("Gateway info request");
         return Mono.just(ResponseEntity.ok(Map.of(

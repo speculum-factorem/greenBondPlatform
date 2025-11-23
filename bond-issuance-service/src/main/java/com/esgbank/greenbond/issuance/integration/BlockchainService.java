@@ -19,10 +19,12 @@ public class BlockchainService {
     @GrpcClient("blockchain-service")
     private BondTokenizationServiceGrpc.BondTokenizationServiceBlockingStub bondTokenizationStub;
 
+    // Токенизация облигации через gRPC вызов к blockchain-integration сервису
     public String tokenizeBond(Bond bond) {
         log.info("Sending bond tokenization request to blockchain for bond: {}", bond.getBondId());
 
         try {
+            // Создаем gRPC запрос с данными облигации для токенизации
             TokenizeBondRequest request = TokenizeBondRequest.newBuilder()
                     .setBondId(bond.getBondId())
                     .setTotalSupply(bond.getTotalSupply().toString())
@@ -31,11 +33,13 @@ public class BlockchainService {
                     .setMaturityDate(bond.getMaturityDate().toString())
                     .setProjectWallet(bond.getProjectWalletAddress())
                     .setVerifierReportHash(bond.getVerifierReportHash())
-                    .setIssuerWallet("0xIssuerWallet") // This should come from issuer profile
+                    .setIssuerWallet("0xIssuerWallet") // В реальной реализации должно браться из профиля эмитента
                     .build();
 
+            // Вызываем gRPC метод токенизации на blockchain-integration сервисе
             TokenizeBondResponse response = bondTokenizationStub.tokenizeBond(request);
 
+            // Проверяем статус ответа
             if (!"SUCCESS".equals(response.getStatus())) {
                 throw new BondIssuanceException("Blockchain tokenization failed: " + response.getMessage());
             }
@@ -44,10 +48,12 @@ public class BlockchainService {
             return response.getTransactionHash();
 
         } catch (StatusRuntimeException e) {
+            // Обработка ошибок gRPC
             log.error("gRPC call failed for bond: {}. Status: {}, Error: {}",
                     bond.getBondId(), e.getStatus(), e.getMessage());
             throw new BondIssuanceException("Blockchain integration failed: " + e.getMessage(), e);
         } catch (Exception e) {
+            // Обработка неожиданных ошибок
             log.error("Unexpected error during bond tokenization: {}. Error: {}",
                     bond.getBondId(), e.getMessage(), e);
             throw new BondIssuanceException("Bond tokenization failed: " + e.getMessage(), e);

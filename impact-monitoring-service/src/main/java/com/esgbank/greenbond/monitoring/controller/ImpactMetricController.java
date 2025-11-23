@@ -35,6 +35,7 @@ public class ImpactMetricController {
 
     private final ImpactMetricService impactMetricService;
 
+    // Эндпоинт для создания новой ESG-метрики воздействия
     @PostMapping
     @Operation(summary = "Create an impact metric", description = "Create a new impact metric measurement")
     @ApiResponses({
@@ -49,10 +50,12 @@ public class ImpactMetricController {
         log.info("REST API: Creating impact metric for bond: {}, type: {}",
                 request.getBondId(), request.getMetricType());
 
+        // Создаем метрику через сервис (сохраняется в MongoDB, InfluxDB и блокчейн)
         ImpactMetricResponse response = impactMetricService.createMetric(request);
         return ResponseEntity.ok(response);
     }
 
+    // Эндпоинт для получения метрики по ID
     @GetMapping("/{metricId}")
     @Operation(summary = "Get impact metric", description = "Get detailed information about an impact metric")
     public ResponseEntity<ImpactMetricResponse> getMetric(
@@ -60,10 +63,12 @@ public class ImpactMetricController {
 
         log.debug("REST API: Getting impact metric: {}", metricId);
 
+        // Получаем метрику через сервис
         ImpactMetricResponse response = impactMetricService.getMetric(metricId);
         return ResponseEntity.ok(response);
     }
 
+    // Эндпоинт для получения метрик по облигации с пагинацией
     @GetMapping("/bond/{bondId}")
     @Operation(summary = "Get metrics by bond", description = "Get paginated list of metrics for a bond")
     public ResponseEntity<Page<ImpactMetricResponse>> getMetricsByBond(
@@ -72,6 +77,7 @@ public class ImpactMetricController {
 
         log.debug("REST API: Getting metrics for bond: {}, page: {}", bondId, pageable.getPageNumber());
 
+        // Получаем метрики через сервис с пагинацией
         Page<ImpactMetricResponse> metrics = impactMetricService.getMetricsByBond(bondId, pageable);
         return ResponseEntity.ok(metrics);
     }

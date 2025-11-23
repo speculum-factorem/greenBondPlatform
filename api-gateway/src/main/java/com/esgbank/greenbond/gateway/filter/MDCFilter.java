@@ -19,17 +19,20 @@ public class MDCFilter implements GatewayFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         try {
-            // Clear and setup MDC
+            // Очищаем MDC перед установкой новых значений
             MDC.clear();
 
+            // Получаем requestId из заголовка или генерируем новый
             String requestId = exchange.getRequest().getHeaders().getFirst("X-Request-ID");
             if (requestId == null) {
                 requestId = UUID.randomUUID().toString();
             }
 
+            // Извлекаем информацию о клиенте для логирования
             String clientIp = getClientIp(exchange.getRequest());
             String userAgent = exchange.getRequest().getHeaders().getFirst("User-Agent");
 
+            // Устанавливаем значения в MDC для трейсинга запроса через все сервисы
             MDC.put("requestId", requestId);
             MDC.put("clientIp", clientIp);
             MDC.put("userAgent", userAgent != null ? userAgent : "unknown");
@@ -41,15 +44,16 @@ public class MDCFilter implements GatewayFilter, Ordered {
                     exchange.getRequest().getPath(),
                     clientIp);
 
-            // Add request ID to response headers
+            // Добавляем requestId в заголовки ответа для клиента
             exchange.getResponse().getHeaders().add("X-Request-ID", requestId);
 
+            // Продолжаем цепочку фильтров и очищаем MDC после завершения
             return chain.filter(exchange)
                     .doOnSuccess(v -> log.info("Request completed successfully"))
                     .doOnError(e -> log.error("Request failed with error: {}", e.getMessage()))
                     .doFinally(signalType -> {
                         log.info("Request processing completed with signal: {}", signalType);
-                        MDC.clear();
+                        MDC.clear(); // Очищаем MDC после обработки запроса
                     });
 
         } catch (Exception e) {
@@ -61,14 +65,18 @@ public class MDCFilter implements GatewayFilter, Ordered {
 
     @Override
     public int getOrder() {
+        // Высший приоритет - этот фильтр должен выполняться первым
         return Ordered.HIGHEST_PRECEDENCE;
     }
 
+    // Извлечение реального IP адреса клиента (учитывает прокси и load balancer)
     private String getClientIp(ServerHttpRequest request) {
+        // Проверяем заголовок X-Forwarded-For (используется за прокси/load balancer)
         String xfHeader = request.getHeaders().getFirst("X-Forwarded-For");
         if (xfHeader != null) {
             return xfHeader.split(",")[0].trim();
         }
+        // Если заголовка нет - берем IP напрямую из запроса
         return request.getRemoteAddress() != null ?
                 request.getRemoteAddress().getAddress().getHostAddress() : "unknown";
     }

@@ -2,6 +2,7 @@ package com.esgbank.greenbond.core.mapper;
 
 import com.esgbank.greenbond.core.model.BaseEntity;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 /**
  * Base mapper with common mappings for entities extending BaseEntity

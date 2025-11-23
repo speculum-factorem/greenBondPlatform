@@ -17,6 +17,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Сервис для управления зелеными облигациями.
+ * Обеспечивает создание, токенизацию, распределение и управление облигациями.
+ * Интегрируется с блокчейн-сервисом для токенизации облигаций.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -29,23 +34,26 @@ public class BondService {
 
     @Transactional
     public BondResponse createBond(BondCreationRequest request, String issuerId, String issuerName) {
+        // Получаем requestId из MDC для трейсинга запроса
         String requestId = MDC.get("requestId");
         log.info("Creating new bond for project: {}, issuer: {}, requestId: {}",
                 request.getProjectName(), issuerId, requestId);
 
         try {
-            // Validate bond creation request
+            // Валидируем запрос на создание облигации
             bondValidationService.validateBondCreation(request);
 
-            // Create bond entity
+            // Создаем сущность облигации из запроса
             Bond bond = bondMapper.toEntity(request);
             bond.setIssuerId(issuerId);
             bond.setIssuerName(issuerName);
-            bond.setStatus(BondStatus.DRAFT);
+            bond.setStatus(BondStatus.DRAFT); // Устанавливаем начальный статус DRAFT
 
+            // Сохраняем облигацию в базу данных
             Bond savedBond = bondRepository.save(bond);
             log.debug("Bond saved to database with id: {}", savedBond.getId());
 
+            // Преобразуем в DTO для ответа
             BondResponse response = bondMapper.toResponse(savedBond);
             log.info("Bond created successfully: {}, requestId: {}", savedBond.getBondId(), requestId);
 
@@ -62,26 +70,28 @@ public class BondService {
     public BondResponse tokenizeBond(String bondId, String issuerId) {
         log.info("Tokenizing bond: {}, issuer: {}", bondId, issuerId);
 
+        // Находим облигацию по ID
         Bond bond = bondRepository.findByBondId(bondId)
                 .orElseThrow(() -> new BondNotFoundException("Bond not found: " + bondId));
 
-        // Verify ownership
+        // Проверяем что эмитент имеет право на токенизацию этой облигации
         if (!bond.getIssuerId().equals(issuerId)) {
             throw new BondIssuanceException("Unauthorized access to bond: " + bondId);
         }
 
-        // Validate bond for tokenization
+        // Валидируем облигацию перед токенизацией (проверяем что все документы верифицированы)
         bondValidationService.validateForTokenization(bond);
 
         try {
-            // Tokenize bond on blockchain
+            // Токенизируем облигацию на блокчейне через blockchain service
             String transactionHash = blockchainService.tokenizeBond(bond);
 
-            // Update bond status
+            // Обновляем статус облигации и сохраняем хеш транзакции
             bond.setStatus(BondStatus.TOKENIZED);
             bond.setBlockchainTxHash(transactionHash);
-            bond.setBondContractAddress(transactionHash); // In real implementation, this would be the contract address
+            bond.setBondContractAddress(transactionHash); // В реальной реализации здесь будет адрес контракта
 
+            // Сохраняем обновленную облигацию
             Bond updatedBond = bondRepository.save(bond);
             log.info("Bond tokenized successfully: {}, txHash: {}", bondId, transactionHash);
 
@@ -132,7 +142,7 @@ public class BondService {
         Bond bond = bondRepository.findByBondId(bondId)
                 .orElseThrow(() -> new BondNotFoundException("Bond not found: " + bondId));
 
-        // Verify ownership
+        // Проверяем что эмитент имеет право изменять статус этой облигации
         if (!bond.getIssuerId().equals(issuerId)) {
             throw new BondIssuanceException("Unauthorized access to bond: " + bondId);
         }
@@ -151,7 +161,7 @@ public class BondService {
         Bond bond = bondRepository.findByBondId(bondId)
                 .orElseThrow(() -> new BondNotFoundException("Bond not found: " + bondId));
 
-        // Verify ownership and check if bond can be deleted
+        // Проверяем право собственности и возможность удаления облигации
         if (!bond.getIssuerId().equals(issuerId)) {
             throw new BondIssuanceException("Unauthorized access to bond: " + bondId);
         }

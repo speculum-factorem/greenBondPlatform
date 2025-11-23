@@ -24,19 +24,22 @@ public class FileStorageService {
     private final FileStorageConfig storageConfig;
     private final Tika tika = new Tika();
 
+    // Валидация загружаемого файла: проверка размера, типа и безопасности
     public void validateFile(MultipartFile file) {
         log.debug("Validating file: {}", file.getOriginalFilename());
 
+        // Проверяем что файл не пустой
         if (file.isEmpty()) {
             throw new DocumentProcessingException("File is empty");
         }
 
+        // Проверяем размер файла (не превышает лимит)
         if (file.getSize() > storageConfig.getMaxFileSize()) {
             throw new DocumentProcessingException(
                     "File size exceeds maximum allowed size: " + storageConfig.getMaxFileSize());
         }
 
-        // Validate file type
+        // Проверяем расширение файла
         String fileExtension = getFileExtension(file.getOriginalFilename());
         if (!isAllowedFileType(fileExtension)) {
             throw new DocumentProcessingException(
@@ -44,11 +47,12 @@ public class FileStorageService {
                             Arrays.toString(storageConfig.getAllowedFileTypes()));
         }
 
-        // Detect MIME type for additional security
+        // Дополнительная проверка безопасности: определяем реальный MIME тип через Apache Tika
         try {
             String detectedMimeType = tika.detect(file.getBytes());
             log.debug("Detected MIME type: {} for file: {}", detectedMimeType, file.getOriginalFilename());
 
+            // Проверяем что реальный MIME тип безопасен (защита от подмены расширения)
             if (!isSafeMimeType(detectedMimeType)) {
                 throw new DocumentProcessingException("Unsafe file type detected: " + detectedMimeType);
             }
@@ -60,25 +64,27 @@ public class FileStorageService {
         log.debug("File validation passed: {}", file.getOriginalFilename());
     }
 
+    // Сохранение файла на диск в директорию для конкретной облигации
     public String storeFile(MultipartFile file, String bondId) throws IOException {
         log.debug("Storing file: {} for bond: {}", file.getOriginalFilename(), bondId);
 
-        // Create upload directory if it doesn't exist
+        // Создаем директорию для облигации если её нет
         Path uploadPath = Paths.get(storageConfig.getUploadDir(), bondId);
         Files.createDirectories(uploadPath);
 
-        // Generate unique filename
+        // Генерируем уникальное имя файла (UUID + оригинальное расширение)
         String fileExtension = getFileExtension(file.getOriginalFilename());
         String fileName = UUID.randomUUID() + "." + fileExtension;
         Path filePath = uploadPath.resolve(fileName);
 
-        // Store file
+        // Сохраняем файл на диск
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
         log.debug("File stored successfully: {}", filePath);
         return filePath.toString();
     }
 
+    // Удаление файла с диска
     public void deleteFile(String filePath) throws IOException {
         log.debug("Deleting file: {}", filePath);
 

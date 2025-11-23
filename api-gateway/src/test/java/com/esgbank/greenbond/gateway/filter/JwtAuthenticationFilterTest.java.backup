@@ -1,12 +1,10 @@
 package com.esgbank.greenbond.gateway.filter;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
@@ -22,18 +20,14 @@ class JwtAuthenticationFilterTest {
     @Mock
     private WebFilterChain filterChain;
 
-    private JwtAuthenticationFilter jwtFilter;
-
-    @BeforeEach
-    void setUp() {
-        jwtFilter = new JwtAuthenticationFilter();
-        when(filterChain.filter(any())).thenReturn(Mono.empty());
-    }
+    private JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter();
 
     @Test
     void shouldProcessRequestWithoutAuthorizationHeader() {
         MockServerHttpRequest request = MockServerHttpRequest.get("/api/test").build();
         MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        when(filterChain.filter(any())).thenReturn(Mono.empty());
 
         StepVerifier.create(jwtFilter.filter(exchange, filterChain))
                 .verifyComplete();
@@ -45,6 +39,8 @@ class JwtAuthenticationFilterTest {
                 .header(HttpHeaders.AUTHORIZATION, "Bearer invalid-token")
                 .build();
         MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        when(filterChain.filter(any())).thenReturn(Mono.empty());
 
         StepVerifier.create(jwtFilter.filter(exchange, filterChain))
                 .expectError()

@@ -10,14 +10,15 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class BlockchainService {
 
+    // Запись верификации документа в блокчейн для неизменяемости
     public void recordDocumentVerification(Document document) {
         log.info("Recording document verification on blockchain: {}", document.getDocumentId());
 
         try {
-            // In a real implementation, this would call the blockchain integration service
-            // to record the document verification hash on the blockchain
+            // В реальной реализации здесь должен быть вызов blockchain-integration сервиса
+            // для записи хеша верификации документа в блокчейн
 
-            // Mock implementation
+            // Mock реализация: генерируем хеш верификации
             String verificationHash = generateVerificationHash(document);
 
             log.info("Document verification recorded on blockchain: {}, hash: {}",
@@ -26,16 +27,19 @@ public class BlockchainService {
         } catch (Exception e) {
             log.error("Failed to record document verification on blockchain: {}. Error: {}",
                     document.getDocumentId(), e.getMessage(), e);
-            // Don't throw exception to avoid blocking the verification process
+            // Не выбрасываем исключение чтобы не блокировать процесс верификации
         }
     }
 
+    // Генерация хеша верификации из данных документа
     private String generateVerificationHash(Document document) {
+        // Формируем строку из ключевых данных документа
         String data = document.getDocumentId() +
                 document.getBondId() +
                 document.getFileHash() +
-                document.getVerifiedAt().toString();
+                (document.getVerifiedAt() != null ? document.getVerifiedAt().toString() : "");
 
+        // Генерируем хеш (в реальной реализации используется SHA-256)
         return "VERIFY-" + Integer.toHexString(data.hashCode());
     }
 }

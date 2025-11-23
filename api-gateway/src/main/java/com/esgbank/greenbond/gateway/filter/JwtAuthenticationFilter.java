@@ -36,34 +36,41 @@ public class JwtAuthenticationFilter implements WebFilter {
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         log.debug("Processing JWT authentication for request: {}", exchange.getRequest().getPath());
 
+        // Извлекаем токен из заголовка Authorization
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
+        // Если токена нет, пропускаем запрос дальше (для публичных эндпоинтов)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             log.warn("No JWT token found in request");
             return chain.filter(exchange);
         }
 
+        // Извлекаем токен (убираем префикс "Bearer ")
         String token = authHeader.substring(7);
 
         try {
+            // Валидируем токен и извлекаем claims
             Claims claims = validateToken(token);
             String username = claims.getSubject();
+            @SuppressWarnings("unchecked")
             List<String> roles = claims.get("roles", List.class);
 
             log.info("Authenticated user: {} with roles: {}", username, roles);
 
+            // Преобразуем роли в GrantedAuthority для Spring Security
             List<SimpleGrantedAuthority> authorities = roles.stream()
                     .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                     .collect(Collectors.toList());
 
+            // Создаем объект аутентификации для Spring Security
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(username, null, authorities);
 
-            // Add user info to MDC
+            // Добавляем информацию о пользователе в MDC для логирования
             MDC.put("username", username);
             MDC.put("roles", String.join(",", roles));
 
-            // Add user info to headers for downstream services
+            // Добавляем информацию о пользователе в заголовки для передачи в downstream сервисы
             ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
                     .header("X-User-Id", claims.get("userId", String.class))
                     .header("X-User-Name", username)
@@ -72,18 +79,22 @@ public class JwtAuthenticationFilter implements WebFilter {
 
             ServerWebExchange mutatedExchange = exchange.mutate().request(mutatedRequest).build();
 
+            // Продолжаем цепочку фильтров с установленным контекстом безопасности
             return chain.filter(mutatedExchange)
                     .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication));
 
         } catch (Exception e) {
             log.error("JWT token validation failed: {}", e.getMessage());
+            // Если токен невалиден, возвращаем 401 Unauthorized
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
     }
 
     private Claims validateToken(String token) {
+        // Создаем секретный ключ из конфигурации для проверки подписи токена
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        // Парсим и валидируем токен, извлекаем claims
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()

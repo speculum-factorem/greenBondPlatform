@@ -1,5 +1,7 @@
 package com.esgbank.greenbond.gateway.config;
 
+// Временно отключено из-за проблем с совместимостью зависимостей
+/*
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
@@ -45,3 +47,4 @@ public class SwaggerConfig {
         return config;
     }
 }
+*/

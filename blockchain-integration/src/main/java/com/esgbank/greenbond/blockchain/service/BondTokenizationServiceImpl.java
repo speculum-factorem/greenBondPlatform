@@ -1,5 +1,8 @@
 package com.esgbank.greenbond.blockchain.service;
 
+import com.esgbank.greenbond.blockchain.model.BlockchainTransactionResult;
+import com.esgbank.greenbond.blockchain.model.BondInfo;
+import com.esgbank.greenbond.blockchain.model.FundVerificationResult;
 import com.esgbank.greenbond.blockchain.proto.*;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;

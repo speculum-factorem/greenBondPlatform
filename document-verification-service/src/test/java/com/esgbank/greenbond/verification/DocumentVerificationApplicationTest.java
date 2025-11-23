@@ -1,5 +1,6 @@
 package com.esgbank.greenbond.verification;
 
+import com.esgbank.greenbond.verification.config.TestConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;

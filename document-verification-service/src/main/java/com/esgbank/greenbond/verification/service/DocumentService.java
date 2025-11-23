@@ -25,7 +25,13 @@ import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.UUID;
 
+/**
+ * Сервис для управления документами.
+ * Обеспечивает загрузку, хранение, обработку и верификацию документов для зеленых облигаций.
+ * Использует MDC для трейсинга запросов через все сервисы.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -39,28 +45,33 @@ public class DocumentService {
 
     public DocumentResponse uploadDocument(DocumentUploadRequest request, MultipartFile file,
                                            String issuerId, String issuerName, String uploadedBy) {
+        // Получаем requestId из MDC для трейсинга запроса
         String requestId = MDC.get("requestId");
         log.info("Uploading document: {} for bond: {}, issuer: {}, requestId: {}",
                 request.getDocumentName(), request.getBondId(), issuerId, requestId);
 
         try {
-            // Validate file
+            // Валидируем файл (размер, тип, безопасность)
             fileStorageService.validateFile(file);
 
-            // Generate file hash
+            // Вычисляем SHA-256 хеш файла для проверки дубликатов и целостности
             String fileHash = calculateFileHash(file);
 
-            // Check for duplicate documents
+            // Проверяем нет ли уже такого же документа (по хешу) для этой облигации
             if (documentRepository.findByBondIdAndDocumentType(request.getBondId(), request.getDocumentType())
                     .stream().anyMatch(doc -> fileHash.equals(doc.getFileHash()))) {
                 throw new DocumentProcessingException("Duplicate document detected");
             }
 
-            // Store file
+            // Сохраняем файл на диск в директорию для облигации
             String filePath = fileStorageService.storeFile(file, request.getBondId());
 
-            // Create document entity
+            // Генерируем уникальный ID для документа
+            String documentId = UUID.randomUUID().toString();
+
+            // Создаем сущность документа с начальным статусом UPLOADED
             Document document = Document.builder()
+                    .documentId(documentId)
                     .bondId(request.getBondId())
                     .issuerId(issuerId)
                     .issuerName(issuerName)
@@ -75,12 +86,13 @@ public class DocumentService {
                     .uploadedBy(uploadedBy)
                     .build();
 
+            // Сохраняем документ в MongoDB
             Document savedDocument = documentRepository.save(document);
 
-            // Start async processing
+            // Запускаем асинхронную обработку документа (извлечение метаданных, полей)
             documentProcessingService.processDocumentAsync(savedDocument);
 
-            // Audit trail
+            // Записываем действие в аудит трейл
             auditService.logDocumentAction(savedDocument.getDocumentId(), "UPLOAD",
                     uploadedBy, "Document uploaded successfully");
 
@@ -152,19 +164,19 @@ public class DocumentService {
         Document document = documentRepository.findByDocumentId(documentId)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found: " + documentId));
 
-        // Verify ownership
+        // Проверяем что эмитент имеет право удалять этот документ
         if (!document.getIssuerId().equals(issuerId)) {
             throw new DocumentProcessingException("Unauthorized access to document: " + documentId);
         }
 
         try {
-            // Delete physical file
+            // Удаляем физический файл с диска
             Files.deleteIfExists(Paths.get(document.getFilePath()));
 
-            // Delete from database
+            // Удаляем из базы данных
             documentRepository.delete(document);
 
-            // Audit trail
+            // Записываем действие в аудит трейл
             auditService.logDocumentAction(documentId, "DELETE", issuerId, "Document deleted");
 
             log.info("Document deleted successfully: {}", documentId);

@@ -13,6 +13,7 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -30,24 +31,26 @@ public class VerificationService {
         log.info("Verifying document: {}, verifier: {}, requestId: {}",
                 documentId, verifierId, requestId);
 
+        // Находим документ по ID
         Document document = documentRepository.findByDocumentId(documentId)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found: " + documentId));
 
-        // Validate document for verification
+        // Валидируем что документ готов к верификации (статус EXTRACTION_COMPLETED или UNDER_REVIEW)
         validateForVerification(document);
 
         try {
-            // Update document status
+            // Определяем новый статус в зависимости от решения аудитора
             DocumentStatus newStatus = Boolean.TRUE.equals(request.getIsApproved()) ?
                     DocumentStatus.VERIFIED : DocumentStatus.REJECTED;
 
+            // Обновляем статус и информацию о верификаторе
             document.setStatus(newStatus);
             document.setVerifierId(verifierId);
             document.setVerifierName(verifierName);
             document.setVerifiedAt(LocalDateTime.now());
             document.setVerificationComment(request.getComment());
 
-            // Add verification step
+            // Добавляем шаг верификации в историю документа
             VerificationStep verificationStep = VerificationStep.builder()
                     .stepName("MANUAL_VERIFICATION")
                     .status("COMPLETED")
@@ -60,18 +63,21 @@ public class VerificationService {
                     ))
                     .build();
 
-            if (document.getVerificationSteps() != null) {
-                document.getVerificationSteps().add(verificationStep);
+            // Инициализируем список шагов если он null
+            if (document.getVerificationSteps() == null) {
+                document.setVerificationSteps(new java.util.ArrayList<>());
             }
+            document.getVerificationSteps().add(verificationStep);
 
+            // Сохраняем обновленный документ
             Document verifiedDocument = documentRepository.save(document);
 
-            // Record verification on blockchain if approved
+            // Если документ одобрен - записываем хеш верификации в блокчейн для неизменяемости
             if (Boolean.TRUE.equals(request.getIsApproved())) {
                 blockchainService.recordDocumentVerification(verifiedDocument);
             }
 
-            // Audit trail
+            // Записываем действие в аудит трейл
             String action = Boolean.TRUE.equals(request.getIsApproved()) ? "VERIFICATION_APPROVED" : "VERIFICATION_REJECTED";
             auditService.logDocumentAction(documentId, action, verifierId, request.getComment());
 
@@ -103,9 +109,10 @@ public class VerificationService {
                 .details(Map.of("reviewRequested", true))
                 .build();
 
-        if (document.getVerificationSteps() != null) {
-            document.getVerificationSteps().add(reviewStep);
+        if (document.getVerificationSteps() == null) {
+            document.setVerificationSteps(new java.util.ArrayList<>());
         }
+        document.getVerificationSteps().add(reviewStep);
 
         Document updatedDocument = documentRepository.save(document);
 

@@ -28,8 +28,8 @@ class JsonUtilsTest {
 
         // Then
         assertThat(deserialized).isNotNull();
-        assertThat(deserialized.getName()).isEqualTo(testObject.getName());
-        assertThat(deserialized.getValue()).isEqualTo(testObject.getValue());
+        assertThat(deserialized.name()).isEqualTo(testObject.name());
+        assertThat(deserialized.value()).isEqualTo(testObject.value());
     }
 
     @Test
@@ -55,7 +55,7 @@ class JsonUtilsTest {
 
         // Then
         assertThat(fromMap).isNotNull();
-        assertThat(fromMap.getName()).isEqualTo(testObject.getName());
+        assertThat(fromMap.name()).isEqualTo(testObject.name());
     }
 
     @Test

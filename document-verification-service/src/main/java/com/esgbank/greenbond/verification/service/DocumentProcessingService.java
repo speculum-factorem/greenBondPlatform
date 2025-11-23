@@ -34,29 +34,30 @@ public class DocumentProcessingService {
     private final AuditService auditService;
     private final Tika tika = new Tika();
 
+    // Асинхронная обработка документа: извлечение метаданных, валидация и извлечение полей
     @Async
     public void processDocumentAsync(Document document) {
         log.info("Starting async processing for document: {}", document.getDocumentId());
 
         try {
-            // Update status to PROCESSING
+            // Обновляем статус на PROCESSING
             document.setStatus(DocumentStatus.PROCESSING);
             documentRepository.save(document);
 
-            // Step 1: Extract metadata and content
+            // Шаг 1: Извлекаем метаданные и содержимое документа через Apache Tika
             processExtraction(document);
 
-            // Step 2: Validate document structure
+            // Шаг 2: Валидируем структуру документа (размер, тип файла)
             processValidation(document);
 
-            // Step 3: Extract specific fields based on document type
+            // Шаг 3: Извлекаем специфичные поля в зависимости от типа документа
             processFieldExtraction(document);
 
-            // Update status to EXTRACTION_COMPLETED
+            // Обновляем статус на EXTRACTION_COMPLETED - документ готов к верификации
             document.setStatus(DocumentStatus.EXTRACTION_COMPLETED);
             documentRepository.save(document);
 
-            // Audit trail
+            // Записываем успешное завершение обработки в аудит трейл
             auditService.logDocumentAction(document.getDocumentId(), "PROCESSING_COMPLETED",
                     "SYSTEM", "Document processing completed successfully");
 
@@ -66,30 +67,35 @@ public class DocumentProcessingService {
             log.error("Document processing failed: {}. Error: {}",
                     document.getDocumentId(), e.getMessage(), e);
 
+            // При ошибке обработки помечаем документ как REJECTED
             document.setStatus(DocumentStatus.REJECTED);
             documentRepository.save(document);
 
+            // Записываем ошибку в аудит трейл
             auditService.logDocumentAction(document.getDocumentId(), "PROCESSING_FAILED",
                     "SYSTEM", "Document processing failed: " + e.getMessage());
         }
     }
 
+    // Извлечение метаданных и содержимого из документа используя Apache Tika
     private void processExtraction(Document document) throws IOException, TikaException, SAXException {
         log.debug("Extracting content from document: {}", document.getDocumentId());
 
+        // Создаем парсер для автоматического определения типа документа
         Parser parser = new AutoDetectParser();
-        BodyContentHandler handler = new BodyContentHandler(-1); // No limit
+        BodyContentHandler handler = new BodyContentHandler(-1); // Без ограничения размера
         Metadata metadata = new Metadata();
         ParseContext context = new ParseContext();
 
         try (FileInputStream stream = new FileInputStream(document.getFilePath())) {
+            // Парсим документ и извлекаем метаданные
             parser.parse(stream, handler, metadata, context);
 
-            // Extract metadata
+            // Извлекаем метаданные (автор, дата создания, количество страниц и т.д.)
             Map<String, Object> extractedMetadata = extractMetadata(metadata);
             document.setMetadata(extractedMetadata);
 
-            // Add verification step
+            // Добавляем шаг извлечения в историю обработки
             VerificationStep extractionStep = VerificationStep.builder()
                     .stepName("CONTENT_EXTRACTION")
                     .status("COMPLETED")
@@ -105,12 +111,13 @@ public class DocumentProcessingService {
         }
     }
 
+    // Валидация документа: проверка размера файла и типа
     private void processValidation(Document document) {
         log.debug("Validating document: {}", document.getDocumentId());
 
         List<String> validationErrors = new ArrayList<>();
 
-        // Validate file size
+        // Проверяем размер файла (максимум 10MB)
         if (document.getFileSize() > 10 * 1024 * 1024) { // 10MB
             validationErrors.add("File size exceeds limit");
         }

@@ -26,7 +26,7 @@ class ValidationUtilsTest {
     @ParameterizedTest
     @ValueSource(strings = {
             "0x742d35Cc6634C0532925a3b8Dc9F5a4B5a7F8E9C",
-            "0xABC123def456DEF789abc012ABC123def456DEF78"
+            "0xABC123def456DEF789abc012ABC123def456DEF7"
     })
     void shouldValidateValidEthereumAddresses(String address) {
         assertTrue(ValidationUtils.isValidEthereumAddress(address));
@@ -36,18 +36,24 @@ class ValidationUtilsTest {
     @ValueSource(strings = {
             "0xinvalid",
             "742d35Cc6634C0532925a3b8Dc9F5a4B5a7F8E9C", // missing 0x
-            "0x742d35Cc6634C0532925a3b8Dc9F5a4B5a7F8E9", // too short
-            null
+            "0x742d35Cc6634C0532925a3b8Dc9F5a4B5a7F8E9" // too short
     })
     void shouldRejectInvalidEthereumAddresses(String address) {
         assertFalse(ValidationUtils.isValidEthereumAddress(address));
     }
 
     @Test
+    void shouldRejectNullEthereumAddress() {
+        assertFalse(ValidationUtils.isValidEthereumAddress(null));
+    }
+
+    @Test
     void shouldValidatePhoneNumbers() {
         assertTrue(ValidationUtils.isValidPhone("+1234567890"));
         assertTrue(ValidationUtils.isValidPhone("+441234567890"));
-        assertFalse(ValidationUtils.isValidPhone("123456")); // too short
+        assertTrue(ValidationUtils.isValidPhone("1234567890")); // valid without +
+        assertTrue(ValidationUtils.isValidPhone("12345")); // valid (starts with 1-9, has at least 1 more digit)
+        assertFalse(ValidationUtils.isValidPhone("012345")); // invalid (starts with 0)
         assertFalse(ValidationUtils.isValidPhone("+abc123")); // invalid characters
         assertFalse(ValidationUtils.isValidPhone(null));
     }

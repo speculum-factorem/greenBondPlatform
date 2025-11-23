@@ -1,6 +1,7 @@
 package com.esgbank.greenbond.gateway.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+// Временно отключено из-за проблем с совместимостью зависимостей
+//import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,14 +12,14 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Authentication request")
+//@Schema(description = "Authentication request")
 public class AuthRequest {
 
     @NotBlank
-    @Schema(description = "Username", example = "issuer@company.com")
+    //@Schema(description = "Username", example = "issuer@company.com")
     private String username;
 
     @NotBlank
-    @Schema(description = "Password", example = "securePassword123")
+    //@Schema(description = "Password", example = "securePassword123")
     private String password;
 }

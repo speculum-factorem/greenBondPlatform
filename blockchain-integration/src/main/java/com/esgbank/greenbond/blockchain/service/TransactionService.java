@@ -1,10 +1,14 @@
 package com.esgbank.greenbond.blockchain.service;
 
+import com.esgbank.greenbond.blockchain.exception.BlockchainException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+
+import java.math.BigInteger;
+import java.util.concurrent.CompletableFuture;
 
 import java.util.concurrent.CompletableFuture;
 

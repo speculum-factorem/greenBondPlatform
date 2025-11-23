@@ -30,6 +30,19 @@ app:
   jwt:
     secret: ${JWT_SECRET:defaultSecretKeyForJWTTokenGenerationInGreenBondPlatform}
     expiration: ${JWT_EXPIRATION:3600}
+  auth:
+    max-failed-attempts: ${MAX_FAILED_LOGIN_ATTEMPTS:5}
+    lockout-duration-minutes: ${ACCOUNT_LOCKOUT_DURATION:30}
+  gateway:
+    # Set to true to use direct URLs instead of Eureka service discovery (for development)
+    use-direct-urls: ${USE_DIRECT_URLS:true}
+  services:
+    bond-issuance:
+      url: ${BOND_ISSUANCE_SERVICE_URL:http://localhost:8081}
+    impact-monitoring:
+      url: ${IMPACT_MONITORING_SERVICE_URL:http://localhost:8084}
+    document-verification:
+      url: ${DOCUMENT_VERIFICATION_SERVICE_URL:http://localhost:8083}
 
 logging:
   level:

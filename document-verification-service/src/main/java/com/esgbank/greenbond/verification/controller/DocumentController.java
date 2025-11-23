@@ -35,6 +35,7 @@ public class DocumentController {
 
     private final DocumentService documentService;
 
+    // Эндпоинт для загрузки документа для верификации
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload a document", description = "Upload a document for verification")
     @ApiResponses({
@@ -53,12 +54,14 @@ public class DocumentController {
         log.info("REST API: Uploading document: {} for bond: {}",
                 request.getDocumentName(), request.getBondId());
 
+        // Загружаем документ через сервис
         DocumentResponse response = documentService.uploadDocument(
                 request, file, issuerId, issuerName, issuerName);
 
         return ResponseEntity.ok(response);
     }
 
+    // Эндпоинт для получения информации о документе по ID
     @GetMapping("/{documentId}")
     @Operation(summary = "Get document details", description = "Get detailed information about a document")
     public ResponseEntity<DocumentResponse> getDocument(
@@ -66,10 +69,12 @@ public class DocumentController {
 
         log.debug("REST API: Getting document details: {}", documentId);
 
+        // Получаем документ через сервис
         DocumentResponse response = documentService.getDocument(documentId);
         return ResponseEntity.ok(response);
     }
 
+    // Эндпоинт для получения списка документов по облигации с пагинацией
     @GetMapping("/bond/{bondId}")
     @Operation(summary = "Get documents by bond", description = "Get paginated list of documents for a bond")
     public ResponseEntity<Page<DocumentResponse>> getDocumentsByBond(
@@ -78,6 +83,7 @@ public class DocumentController {
 
         log.debug("REST API: Getting documents for bond: {}, page: {}", bondId, pageable.getPageNumber());
 
+        // Получаем документы через сервис с пагинацией
         Page<DocumentResponse> documents = documentService.getDocumentsByBond(bondId, pageable);
         return ResponseEntity.ok(documents);
     }

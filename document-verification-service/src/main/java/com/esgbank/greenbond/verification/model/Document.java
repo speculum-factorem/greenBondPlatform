@@ -11,7 +11,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,7 +20,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "documents")
+@org.springframework.data.mongodb.core.mapping.Document(collection = "documents")
 public class Document {
 
     @Id
@@ -78,11 +77,4 @@ public class Document {
 
     @Version
     private Long version;
-
-    @PrePersist
-    public void generateDocumentId() {
-        if (documentId == null) {
-            documentId = "DOC-" + System.currentTimeMillis();
-        }
-    }
 }

@@ -25,6 +25,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Сервис для управления ESG-метриками воздействия.
+ * Обеспечивает сбор, валидацию, оценку качества данных и хранение метрик.
+ * Интегрируется с InfluxDB для временных рядов и блокчейном для неизменяемости данных.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -36,29 +41,38 @@ public class ImpactMetricService {
     private final DataQualityService dataQualityService;
     private final BlockchainService blockchainService;
 
+    /**
+     * Создает новую ESG-метрику воздействия.
+     * Валидирует данные, оценивает качество, сохраняет в MongoDB и InfluxDB, записывает в блокчейн.
+     *
+     * @param request запрос на создание метрики
+     * @return ImpactMetricResponse информация о созданной метрике
+     */
     @Transactional
     public ImpactMetricResponse createMetric(ImpactMetricRequest request) {
+        // Получаем requestId из MDC для трейсинга запроса
         String requestId = MDC.get("requestId");
         log.info("Creating impact metric for bond: {}, metric: {}, requestId: {}",
                 request.getBondId(), request.getMetricType(), requestId);
 
         try {
-            // Validate metric data
+            // Валидируем данные метрики (формат, диапазон значений)
             validateMetricRequest(request);
 
-            // Calculate data quality
+            // Оцениваем качество данных (полнота, точность, актуальность)
             var dataQuality = dataQualityService.assessDataQuality(request);
 
-            // Create metric entity
+            // Создаем сущность метрики из запроса
             ImpactMetric metric = metricMapper.toEntity(request);
             metric.setDataQuality(dataQuality);
 
+            // Сохраняем метрику в MongoDB
             ImpactMetric savedMetric = metricRepository.save(metric);
 
-            // Store in time series database
+            // Сохраняем метрику в InfluxDB для временных рядов и аналитики
             timeSeriesService.storeMetricInTimeSeries(savedMetric);
 
-            // Record on blockchain for immutability
+            // Записываем метрику в блокчейн для неизменяемости и прозрачности
             blockchainService.recordImpactMetric(savedMetric);
 
             log.info("Impact metric created successfully: {}, bond: {}",
@@ -73,18 +87,22 @@ public class ImpactMetricService {
         }
     }
 
+    // Получение метрики по ID
     public ImpactMetricResponse getMetric(String metricId) {
         log.debug("Fetching impact metric: {}", metricId);
 
+        // Находим метрику в MongoDB
         ImpactMetric metric = metricRepository.findByMetricId(metricId)
                 .orElseThrow(() -> new MetricNotFoundException("Impact metric not found: " + metricId));
 
         return metricMapper.toResponse(metric);
     }
 
+    // Получение метрик по облигации с пагинацией
     public Page<ImpactMetricResponse> getMetricsByBond(String bondId, Pageable pageable) {
         log.debug("Fetching metrics for bond: {}, page: {}", bondId, pageable.getPageNumber());
 
+        // Получаем метрики из MongoDB с пагинацией
         Page<ImpactMetric> metrics = metricRepository.findByBondId(bondId, pageable);
         return metrics.map(metricMapper::toResponse);
     }
@@ -147,10 +165,10 @@ public class ImpactMetricService {
                 .orElseThrow(() -> new MetricNotFoundException("Impact metric not found: " + metricId));
 
         try {
-            // Remove from time series database
+            // Удаляем из базы данных временных рядов
             timeSeriesService.deleteMetricFromTimeSeries(metric);
 
-            // Delete from MongoDB
+            // Удаляем из MongoDB
             metricRepository.delete(metric);
 
             log.info("Impact metric deleted successfully: {}", metricId);
@@ -170,7 +188,7 @@ public class ImpactMetricService {
             throw new ImpactMonitoringException("Metric timestamp cannot be in the future");
         }
 
-        // Validate unit compatibility with metric type
+        // Проверяем совместимость единицы измерения с типом метрики
         if (!isValidUnitForMetricType(request.getMetricType(), request.getUnit())) {
             throw new ImpactMonitoringException(
                     "Invalid unit " + request.getUnit() + " for metric type " + request.getMetricType());
@@ -178,7 +196,7 @@ public class ImpactMetricService {
     }
 
     private boolean isValidUnitForMetricType(MetricType metricType, com.esgbank.greenbond.monitoring.model.enums.MetricUnit unit) {
-        // This would contain the business logic for unit validation
+        // Бизнес-логика валидации единиц измерения для типов метрик
         // For now, return true for all combinations
         return true;
     }

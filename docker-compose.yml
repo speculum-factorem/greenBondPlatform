@@ -1,0 +1,224 @@
+version: '3.8'
+
+services:
+  # PostgreSQL для Bond Issuance Service
+  postgres:
+    image: postgres:15-alpine
+    container_name: greenbond-postgres
+    environment:
+      POSTGRES_DB: greenbond
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - greenbond-network
+
+  # MongoDB для Document Verification и Impact Monitoring
+  mongodb:
+    image: mongo:7.0
+    container_name: greenbond-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - greenbond-network
+
+  # Redis для кэширования и rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: greenbond-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - greenbond-network
+
+  # InfluxDB для временных рядов (Impact Monitoring)
+  influxdb:
+    image: influxdb:2.7-alpine
+    container_name: greenbond-influxdb
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: admin123456
+      DOCKER_INFLUXDB_INIT_ORG: esgbank
+      DOCKER_INFLUXDB_INIT_BUCKET: metrics
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8086/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - greenbond-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: greenbond-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-defaultSecretKeyForJWTTokenGenerationInGreenBondPlatform}
+      BOND_ISSUANCE_SERVICE_URL: http://bond-issuance-service:8081
+      IMPACT_MONITORING_SERVICE_URL: http://impact-monitoring-service:8084
+      DOCUMENT_VERIFICATION_SERVICE_URL: http://document-verification-service:8083
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - greenbond-network
+
+  # Bond Issuance Service
+  bond-issuance-service:
+    build:
+      context: ./bond-issuance-service
+      dockerfile: Dockerfile
+    container_name: greenbond-bond-issuance
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      BLOCKCHAIN_SERVICE_HOST: blockchain-integration
+      BLOCKCHAIN_SERVICE_PORT: 9090
+    depends_on:
+      postgres:
+        condition: service_healthy
+      blockchain-integration:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - greenbond-network
+
+  # Document Verification Service
+  document-verification-service:
+    build:
+      context: ./document-verification-service
+      dockerfile: Dockerfile
+    container_name: greenbond-document-verification
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MONGODB_HOST: mongodb
+      MONGODB_PORT: 27017
+      MONGODB_DATABASE: document_verification
+    volumes:
+      - document_uploads:/app/document-uploads
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - greenbond-network
+
+  # Impact Monitoring Service
+  impact-monitoring-service:
+    build:
+      context: ./impact-monitoring-service
+      dockerfile: Dockerfile
+    container_name: greenbond-impact-monitoring
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MONGODB_HOST: mongodb
+      MONGODB_PORT: 27017
+      MONGODB_DATABASE: impact_monitoring
+      INFLUXDB_URL: http://influxdb:8086
+      INFLUXDB_TOKEN: ${INFLUXDB_TOKEN:-}
+      INFLUXDB_ORG: esgbank
+      INFLUXDB_BUCKET: metrics
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - greenbond-network
+
+  # Blockchain Integration Service
+  blockchain-integration:
+    build:
+      context: ./blockchain-integration
+      dockerfile: Dockerfile
+    container_name: greenbond-blockchain-integration
+    ports:
+      - "8082:8082"
+      - "9090:9090"  # gRPC порт
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      ETHEREUM_NODE_URL: ${ETHEREUM_NODE_URL:-http://localhost:8545}
+      PRIVATE_KEY: ${PRIVATE_KEY:-}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - greenbond-network
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+  influxdb_data:
+  document_uploads:
+
+networks:
+  greenbond-network:
+    driver: bridge
+

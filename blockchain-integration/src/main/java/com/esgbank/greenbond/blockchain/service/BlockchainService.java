@@ -1,5 +1,9 @@
 package com.esgbank.greenbond.blockchain.service;
 
+import com.esgbank.greenbond.blockchain.exception.BlockchainException;
+import com.esgbank.greenbond.blockchain.model.BlockchainTransactionResult;
+import com.esgbank.greenbond.blockchain.model.BondInfo;
+import com.esgbank.greenbond.blockchain.model.FundVerificationResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,6 +19,7 @@ public class BlockchainService {
     private final SmartContractService smartContractService;
     private final TransactionService transactionService;
 
+    // Токенизация облигации на блокчейне: создание смарт-контракта для облигации
     public BlockchainTransactionResult tokenizeBond(
             String bondId,
             String totalSupply,
@@ -29,7 +34,7 @@ public class BlockchainService {
                 bondId, totalSupply, faceValue);
 
         try {
-            // Deploy or interact with bond tokenization contract
+            // Деплоим смарт-контракт для токенизации облигации на Ethereum
             TransactionReceipt receipt = smartContractService.deployBondToken(
                     bondId,
                     totalSupply,
@@ -41,6 +46,7 @@ public class BlockchainService {
                     issuerWallet
             );
 
+            // Возвращаем результат транзакции с хешем и адресом контракта
             return BlockchainTransactionResult.builder()
                     .transactionHash(receipt.getTransactionHash())
                     .contractAddress(receipt.getContractAddress())
@@ -55,10 +61,12 @@ public class BlockchainService {
         }
     }
 
+    // Получение информации об облигации из блокчейна
     public BondInfo getBondStatus(String bondId, String transactionHash) {
         log.debug("Getting bond status for bond: {}", bondId);
 
         try {
+            // Читаем данные облигации из смарт-контракта
             return smartContractService.getBondInfo(bondId, transactionHash);
         } catch (Exception e) {
             log.error("Failed to get bond status for bond: {}. Error: {}", bondId, e.getMessage());
@@ -66,6 +74,7 @@ public class BlockchainService {
         }
     }
 
+    // Запись ESG-метрики в блокчейн для неизменяемости данных
     public BlockchainTransactionResult recordImpactData(
             String bondId,
             String metricType,
@@ -79,6 +88,7 @@ public class BlockchainService {
                 bondId, metricType, value);
 
         try {
+            // Записываем метрику в смарт-контракт на блокчейне
             TransactionReceipt receipt = smartContractService.recordImpact(
                     bondId,
                     metricType,
@@ -89,6 +99,7 @@ public class BlockchainService {
                     dataHash
             );
 
+            // Возвращаем результат транзакции
             return BlockchainTransactionResult.builder()
                     .transactionHash(receipt.getTransactionHash())
                     .blockNumber(receipt.getBlockNumber().longValue())

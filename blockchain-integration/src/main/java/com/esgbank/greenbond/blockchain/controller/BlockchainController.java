@@ -1,5 +1,7 @@
 package com.esgbank.greenbond.blockchain.controller;
 
+import com.esgbank.greenbond.blockchain.controller.dto.TokenizeBondRequest;
+import com.esgbank.greenbond.blockchain.controller.dto.VerifyFundUsageRequest;
 import com.esgbank.greenbond.blockchain.model.BlockchainTransactionResult;
 import com.esgbank.greenbond.blockchain.model.BondInfo;
 import com.esgbank.greenbond.blockchain.model.FundVerificationResult;
