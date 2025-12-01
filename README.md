@@ -4,7 +4,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 [![Swagger](https://img.shields.io/badge/Swagger-OpenAPI-green.svg)](http://localhost:8080/swagger-ui.html)
-[![GitHub](https://img.shields.io/badge/GitHub-Repository-black.svg)](https://github.com/esgbank/green-bond-platform)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-black.svg)](https://github.com/speculum-factorem/greenBondPlatform.git)
 
 ## Описание
 
@@ -90,8 +90,8 @@
 │  Issuance    │ │ Verification │ │ Monitoring   │ │ Integration  │
 │  (8081)      │ │   (8083)     │ │   (8084)     │ │  (8082/9090) │
 └──────┬───────┘ └──────┬───────┘ └──────┬───────┘ └──────┬───────┘
-       │                 │                │                │
-       ▼                 ▼                ▼                ▼
+       │                │                │                │
+       ▼                ▼                ▼                ▼
 ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
 │ PostgreSQL   │ │   MongoDB    │ │   MongoDB    │ │   Ethereum   │
 │              │ │              │ │  + InfluxDB  │ │  Blockchain  │
@@ -459,7 +459,7 @@ DRAFT → GENERATING → GENERATED → UNDER_REVIEW → APPROVED → PUBLISHED �
 1. **Клонируйте репозиторий:**
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/speculum-factorem/greenBondPlatform.git
 cd green-bond-platform
 ```
 
@@ -933,8 +933,8 @@ ghcr.io/<owner>/blockchain-integration:latest
 Бейджи статуса сборки можно добавить в README:
 
 ```markdown
-![CI](https://github.com/<owner>/<repo>/workflows/CI/badge.svg)
-![CD](https://github.com/<owner>/<repo>/workflows/CD/badge.svg)
+![CI](https://github.com/speculum-factorem/greenBondPlatform/workflows/CI/badge.svg)
+![CD](https://github.com/speculum-factorem/greenBondPlatform/workflows/CD/badge.svg)
 ```
 
 ## Best Practices
