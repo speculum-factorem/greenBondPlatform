@@ -16,7 +16,7 @@
     <properties>
         <grpc.version>1.59.0</grpc.version>
         <protobuf.version>3.25.1</protobuf.version>
-        <web3j.version>4.9.7</web3j.version>
+        <web3j.version>5.0.1</web3j.version>
     </properties>
 
     <dependencies>
